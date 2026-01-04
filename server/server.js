@@ -10,6 +10,7 @@ const notFoundMiddleware = require('./src/middleware/not-found');
 const connectDB = require('./src/db/connect');
 
 const authRouter = require('./src/router/authRouter');
+const logRouter = require('./src/router/logRouter')
 
 // middleware
 app.use(cors());
@@ -19,6 +20,7 @@ app.get('/', (req,res)=>{
     res.send("server is working...");
 })
 app.use('/api/v1/auth',authRouter);
+app.use('/api/v1/log',logRouter);
 
 // error handler middleaware
 app.use(notFoundMiddleware);
