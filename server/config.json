@@ -1,0 +1,4 @@
+{
+  "database": "MongoDB",
+  "auth": "JWT"
+}
