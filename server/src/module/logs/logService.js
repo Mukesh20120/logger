@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 const {transcriptQueue, TRANSCIPT_QUEUE} = require('../../../infra/queue/transcription.queue')
+const {logger} = require('../../utils/log')
 
 const TEMP_DIR = path.join(__dirname, "../../temp");
 
@@ -23,7 +24,7 @@ const createFromVoice = async ({ audioBuffer, mimeType }) => {
     id
    })
 
-   console.log('Job queue ', id);
+   logger.log('info', `Job Queue id:${id}`);
     
   return {
     message: "Voice log accepted",

@@ -1,26 +1,34 @@
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const {logger} = require('./src/utils/log')
+// const {requestLogger} = require('./src/middleware/requestLogger')
 
 const keys = require('./src/config/keys');
 
 const app = express();
 
 const errorHandlerMiddleware = require('./src/middleware/error-handler');
+const { authMiddleware } = require('./src/middleware/authMiddleware');
 const notFoundMiddleware = require('./src/middleware/not-found');
+
 const connectDB = require('./src/db/connect');
 
 const authRouter = require('./src/router/authRouter');
-const logRouter = require('./src/router/logRouter')
+const logRouter = require('./src/router/logRouter');
 
 // middleware
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
+// app.use(requestLogger);
 
 app.get('/', (req,res)=>{
+  logger.info('Server is working fine. :)')
     res.send("server is working...");
 })
 app.use('/api/v1/auth',authRouter);
-app.use('/api/v1/log',logRouter);
+app.use('/api/v1/log',authMiddleware,logRouter);
 
 // error handler middleaware
 app.use(notFoundMiddleware);

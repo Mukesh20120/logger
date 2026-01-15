@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const validator = require('validator');
 
 const UserSchema = new mongoose.Schema({
-    name: {
+    userName: {
         type: String,
         required: [true, 'Please provide name'],
         minlength: 3,
@@ -22,10 +22,8 @@ const UserSchema = new mongoose.Schema({
         required: true,
         minlength: 6
     },
-    role: {
+    refreshToken: {
         type: String,
-        enum: ['admin', 'user'],
-        default: 'user'
     },
 })
 
