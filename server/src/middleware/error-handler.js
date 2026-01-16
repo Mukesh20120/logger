@@ -1,4 +1,5 @@
-const {StatusCodes} = require('http-status-codes')
+const {StatusCodes} = require('http-status-codes');
+const { logger } = require('../utils/log');
 const errorHandlerMiddleware = (err,req,res,next)=>{
 
     let customError = {
@@ -19,6 +20,13 @@ const errorHandlerMiddleware = (err,req,res,next)=>{
         customError.message = `No item is found with id ${err.value}`;
         customError.statusCode = 404;
     }
+
+    logger.error('Unhandlede error', {
+        message: err.message,
+        stack: err.stack,
+        method: req.method,
+        url: req.originalUrl
+    });
 
 return res.status(customError.statusCode).json({message: customError.message});
 }
