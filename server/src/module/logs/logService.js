@@ -10,7 +10,7 @@ if (!fs.existsSync(TEMP_DIR)) {
   fs.mkdirSync(TEMP_DIR);
 }
 
-const createFromVoice = async ({ audioBuffer, mimeType }) => {
+const createFromVoice = async ({ audioBuffer, mimeType, userId }) => {
 
     const id = uuidv4();
     const ext = mimeType.includes("wav") ? "wav" : "m4a";
@@ -21,7 +21,8 @@ const createFromVoice = async ({ audioBuffer, mimeType }) => {
    transcriptQueue.add(TRANSCIPT_QUEUE, {
     audioPath,
     mimeType,
-    id
+    id,
+    userId
    })
 
    logger.log('info', `Job Queue id:${id}`);
