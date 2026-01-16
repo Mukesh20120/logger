@@ -18,7 +18,14 @@ const authRouter = require('./src/router/authRouter');
 const logRouter = require('./src/router/logRouter');
 
 // middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173", // 👈 Vite dev server
+    credentials: true,               // 👈 ALLOW COOKIES
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 // app.use(requestLogger);
