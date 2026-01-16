@@ -1,7 +1,13 @@
 // modules/logs/logs.controller.js
 const logsService = require("../module/logs/logService");
+const { logger } = require("../utils/log");
+const customError = require('../errors');
+const dailyLog = require("../../worker/model/dailyLog");
+const { StatusCodes } = require("http-status-codes");
 
 const createVoiceLog = async (req, res) => {
+  const userId = req.userId;
+  logger.log('info', `userId ${userId}`)
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -15,6 +21,7 @@ const createVoiceLog = async (req, res) => {
     const log = await logsService.createFromVoice({
       audioBuffer,
       mimeType,
+      userId
     });
 
     return res.status(201).json(log);
@@ -26,4 +33,11 @@ const createVoiceLog = async (req, res) => {
   }
 };
 
-module.exports = { createVoiceLog };
+const getList = async (req, res) => {
+  const userId = req.userId;
+  if(!userId)throw new customError.UnAuthorizedError('Please login again.');
+  const list = await dailyLog.findOne({userId, date: "2026-01-16"});
+  res.status(StatusCodes.OK).json({success: true,message: 'User list fetch successfully', list})
+}
+
+module.exports = { createVoiceLog, getList };
