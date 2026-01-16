@@ -1,35 +1,79 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Link, Outlet, useNavigate } from "react-router";
 
-function App() {
-  const [count, setCount] = useState(0)
+
+
+const Navbar: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = (): void => {
+    navigate("/login");
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3 shadow-sm">
+      {/* Logo */}
+      <Link to="/" className="text-blue-600 font-semibold text-2xl">
+        Logger
+      </Link>
 
-export default App
+      {/* Right side */}
+      <div className="flex items-center gap-4">
+        {false ? (
+          <>
+            {/* User Icon */}
+            <div
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 font-semibold cursor-pointer"
+              aria-label="User profile"
+            >
+              U
+            </div>
+
+            {/* Logout */}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="text-sm text-red-600 hover:text-red-700 font-medium"
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <Link
+              to="/login"
+              className="text-sm font-medium text-gray-700 hover:text-blue-600"
+            >
+              Login
+            </Link>
+            <Link
+              to="/signup"
+              className="text-sm font-medium text-gray-700 hover:text-blue-600"
+            >
+              Signup
+            </Link>
+          </>
+        )}
+      </div>
+    </header>
+  );
+};
+
+const Footer: React.FC = () => {
+  return (
+    <footer className="border-t bg-white border-gray-200 text-center text-sm text-gray-500 py-3">
+      © {new Date().getFullYear()} Logger. Built with ❤️ and 🧠.
+    </footer>
+  );
+};
+
+export default function App(){
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      <main className="flex flex-grow w-full">
+        <Outlet />
+      </main>
+      <Footer />
+    </div>
+  );
+}
