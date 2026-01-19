@@ -7,18 +7,19 @@ import {
   TouchableOpacity, 
   KeyboardAvoidingView, 
   Platform,
-  SafeAreaView 
 } from "react-native";
 import { registerApi } from "../api/auth.api";
+import { useAuth } from "../context/AuthContext";
 
 export default function RegisterScreen({ navigation }: any) {
+  const {baseUrl} = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
 
   const handleRegister = async () => {
     try {
-      await registerApi(email, password);
+      await registerApi(email, password, baseUrl);
       setMsg("Registered successfully!");
       // Adding a slight delay so the user can see the success message 
       // before being redirected
@@ -30,7 +31,7 @@ export default function RegisterScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.inner}
@@ -81,7 +82,7 @@ export default function RegisterScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 

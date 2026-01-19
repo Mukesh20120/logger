@@ -1,7 +1,5 @@
-const BASE_URL = "http://192.168.0.117:5000/api/v1"; 
-// change to localhost or IP if needed
 
-export const loginApi = async (email: string, password: string) => {
+export const loginApi = async (email: string, password: string, BASE_URL: string | undefined) => {
   console.log({email, password});
   const res = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
@@ -17,7 +15,7 @@ export const loginApi = async (email: string, password: string) => {
   return res.json();
 };
 
-export const registerApi = async (email: string, password: string) => {
+export const registerApi = async (email: string, password: string, BASE_URL: string | undefined) => {
   const res = await fetch(`${BASE_URL}/auth/register`, {
     method: "POST",
     headers: {
