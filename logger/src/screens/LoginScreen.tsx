@@ -12,14 +12,15 @@ import { loginApi } from "../api/auth.api";
 import { useAuth } from "../context/AuthContext";
 
 export default function LoginScreen({ navigation }: any) {
+  const { login,baseUrl, storeBaseUrl } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [url, setUrl] = useState(baseUrl);
   const [error, setError] = useState("");
-  const { login } = useAuth();
 
   const handleLogin = async () => {
     try {
-      const res = await loginApi(email, password);
+      const res = await loginApi(email, password, baseUrl);
       login(res.accessToken);
     } catch (err) {
       setError("Invalid credentials. Please try again.");
@@ -56,8 +57,18 @@ export default function LoginScreen({ navigation }: any) {
             onChangeText={setPassword}
           />
 
+          <Text style={styles.label}>Base Url</Text>
+          <TextInput
+            placeholder="url"
+            value={url}
+            style={styles.input}
+            onChangeText={setUrl}
+          />
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
+          <TouchableOpacity style={styles.loginButton} onPress={()=>{storeBaseUrl(url)}}>
+            <Text style={styles.loginButtonText}>Save Base Url</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
             <Text style={styles.loginButtonText}>Login</Text>
           </TouchableOpacity>

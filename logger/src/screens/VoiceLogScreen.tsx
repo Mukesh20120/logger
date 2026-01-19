@@ -17,11 +17,10 @@ import Sound, {
 } from 'react-native-nitro-sound';
 import { useAuth } from '../context/AuthContext';
 
-const API_URL = 'http://192.168.0.117:5000/api/v1/log/voice';
 
 export default function VoiceLogScreen() {
-  const { token } = useAuth();
-
+  const { token, baseUrl } = useAuth();
+  const API_URL = `${baseUrl}/log/voice`;
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 

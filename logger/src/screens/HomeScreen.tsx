@@ -1,17 +1,14 @@
 import { View, Text, Button, StyleSheet } from "react-native";
 import { useAuth } from "../context/AuthContext";
-import VoiceLogScreen from "./VoiceLogScreen";
 
-export default function HomeScreen() {
+export default function HomeScreen({navigation}: any) {
   const { logout } = useAuth();
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>🎙 Logger Home</Text>
       <Button title="Logout" onPress={logout} />
-     <View>
-      <VoiceLogScreen/>
-     </View>
+      <Button title="Voice Logger" onPress={()=>{navigation.navigate('Voice')}} />
     </View>
   );
 }
