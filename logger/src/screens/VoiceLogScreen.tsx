@@ -7,6 +7,8 @@ import {
   PermissionsAndroid,
   Platform,
   Alert,
+  SafeAreaView,
+  StatusBar,
 } from 'react-native';
 
 import Sound, {
@@ -38,17 +40,13 @@ export default function VoiceLogScreen() {
     return true;
   };
 
-  // ---------------- RECORD ----------------
-
   const onStartRecord = async () => {
     const ok = await requestPermission();
     if (!ok) return;
-
     try {
       Sound.addRecordBackListener((e: RecordBackType) => {
         setRecordSecs(e.currentPosition);
       });
-
       const path = await Sound.startRecorder();
       setRecordPath(path);
       setIsRecording(true);
@@ -61,31 +59,24 @@ export default function VoiceLogScreen() {
     try {
       const path = await Sound.stopRecorder();
       Sound.removeRecordBackListener();
-
       setIsRecording(false);
       setRecordSecs(0);
-
       if (path) setRecordPath(path);
     } catch (err) {
       console.error('Stop record error', err);
     }
   };
 
-  // ---------------- PLAYBACK ----------------
-
   const onStartPlay = async () => {
     if (!recordPath) return;
-
     try {
       Sound.addPlayBackListener((e: PlayBackType) => {
         setPlaySecs(e.currentPosition);
         setDuration(e.duration);
-
         if (e.currentPosition >= e.duration) {
           onStopPlay();
         }
       });
-
       await Sound.startPlayer(recordPath);
       setIsPlaying(true);
     } catch (err) {
@@ -97,7 +88,6 @@ export default function VoiceLogScreen() {
     try {
       await Sound.stopPlayer();
       Sound.removePlayBackListener();
-
       setIsPlaying(false);
       setPlaySecs(0);
     } catch (err) {
@@ -105,14 +95,10 @@ export default function VoiceLogScreen() {
     }
   };
 
-  // ---------------- UPLOAD ----------------
-
   const uploadAudio = async () => {
     if (!recordPath) return;
-
     try {
-      const uri =
-        Platform.OS === 'android' && !recordPath.startsWith('file://')
+      const uri = Platform.OS === 'android' && !recordPath.startsWith('file://')
           ? `file://${recordPath}`
           : recordPath;
 
@@ -125,122 +111,202 @@ export default function VoiceLogScreen() {
 
       const res = await fetch(API_URL, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
       if (!res.ok) throw new Error('Upload failed');
-
-      Alert.alert('Success', 'Voice log uploaded');
+      Alert.alert('Success', 'Voice log uploaded successfully');
       setRecordPath(null);
     } catch (err) {
-      console.error('Upload error', err);
       Alert.alert('Error', 'Failed to upload audio');
     }
   };
 
-  // ---------------- UI ----------------
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Voice Logger</Text>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" />
+      
+      <View style={styles.header}>
+        <Text style={styles.title}>Voice Log</Text>
+        <Text style={styles.subtitle}>Record your thoughts</Text>
+      </View>
 
-      {isRecording && (
-        <Text style={styles.timer}>
-          Recording: {Sound.mmssss(Math.floor(recordSecs))}
-        </Text>
-      )}
-
-      {recordPath && !isRecording && (
-        <Text style={styles.timer}>
-          Playback: {Sound.mmssss(Math.floor(playSecs))} /{' '}
-          {Sound.mmssss(Math.floor(duration))}
-        </Text>
-      )}
-
-      {/* RECORD BUTTON */}
-      <TouchableOpacity
-        style={[styles.mic, isRecording && styles.active]}
-        onPress={isRecording ? onStopRecord : onStartRecord}
-      >
-        <Text style={styles.text}>{isRecording ? 'STOP' : 'REC'}</Text>
-      </TouchableOpacity>
-
-      {/* PLAY / PAUSE */}
-      {recordPath && !isRecording && (
-        <TouchableOpacity
-          style={styles.secondaryBtn}
-          onPress={isPlaying ? onStopPlay : onStartPlay}
-        >
-          <Text style={styles.secondaryText}>
-            {isPlaying ? 'STOP PLAY' : 'PLAY'}
+      <View style={styles.centerSection}>
+        {/* Status Indicators */}
+        <View style={styles.statusBadge}>
+          <View style={[styles.dot, isRecording && styles.dotRecording]} />
+          <Text style={styles.statusText}>
+            {isRecording ? 'RECORDING' : isPlaying ? 'PLAYING' : 'READY'}
           </Text>
-        </TouchableOpacity>
-      )}
+        </View>
 
-      {/* UPLOAD */}
-      {recordPath && !isRecording && (
-        <TouchableOpacity style={styles.uploadBtn} onPress={uploadAudio}>
-          <Text style={styles.uploadText}>UPLOAD</Text>
+        {/* Timer Display */}
+        <Text style={styles.timerLarge}>
+          {isRecording 
+            ? Sound.mmssss(Math.floor(recordSecs)) 
+            : recordPath 
+              ? `${Sound.mmssss(Math.floor(playSecs))} / ${Sound.mmssss(Math.floor(duration))}`
+              : "00:00"}
+        </Text>
+
+        {/* The Main Action Button */}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={[styles.micCircle, isRecording && styles.micRecording]}
+          onPress={isRecording ? onStopRecord : onStartRecord}
+        >
+          <View style={styles.micInner}>
+            <View style={isRecording ? styles.stopSquare : styles.recordCircle} />
+          </View>
         </TouchableOpacity>
-      )}
-    </View>
+      </View>
+
+      {/* Footer Actions */}
+      <View style={styles.footer}>
+        {recordPath && !isRecording && (
+          <>
+            <TouchableOpacity 
+              style={styles.playbackBtn} 
+              onPress={isPlaying ? onStopPlay : onStartPlay}
+            >
+              <Text style={styles.playbackBtnText}>
+                {isPlaying ? 'Stop Preview' : 'Listen Back'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.uploadBtn} onPress={uploadAudio}>
+              <Text style={styles.uploadText}>Send Voice Log</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
+    </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#020617',
+  },
+  header: {
+    marginTop: 40,
+    alignItems: 'center',
   },
   title: {
     color: '#fff',
-    fontSize: 22,
-    marginBottom: 12,
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
-  timer: {
-    color: '#94a3b8',
+  subtitle: {
+    color: '#64748b',
+    fontSize: 16,
+    marginTop: 4,
+  },
+  centerSection: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1e293b',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
     marginBottom: 20,
-    fontSize: 14,
   },
-  mic: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#94a3b8',
+    marginRight: 8,
+  },
+  dotRecording: {
+    backgroundColor: '#ef4444',
+  },
+  statusText: {
+    color: '#cbd5e1',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+  timerLarge: {
+    color: '#fff',
+    fontSize: 54,
+    fontWeight: '300',
+    fontVariant: ['tabular-nums'],
+    marginBottom: 40,
+  },
+  micCircle: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(34, 197, 94, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#22c55e',
+  },
+  micRecording: {
+    borderColor: '#ef4444',
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+  },
+  micInner: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: '#22c55e',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
   },
-  active: {
-    backgroundColor: '#ef4444',
+  recordCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#fff',
   },
-  text: {
+  stopSquare: {
+    width: 25,
+    height: 25,
+    borderRadius: 4,
+    backgroundColor: '#fff',
+  },
+  footer: {
+    padding: 24,
+    gap: 12,
+  },
+  playbackBtn: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderRadius: 14,
+    backgroundColor: '#1e293b',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  playbackBtnText: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  secondaryBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 30,
-    backgroundColor: '#334155',
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  secondaryText: {
-    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   uploadBtn: {
-    paddingVertical: 12,
-    paddingHorizontal: 40,
+    paddingVertical: 18,
+    alignItems: 'center',
+    borderRadius: 14,
     backgroundColor: '#3b82f6',
-    borderRadius: 8,
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
   },
   uploadText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '700',
   },
 });
