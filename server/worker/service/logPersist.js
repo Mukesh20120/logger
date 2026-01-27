@@ -1,22 +1,26 @@
 const DailyLog = require("../model/dailyLog");
 
 const saveLogForUser = async ({ userId, text }) => {
-  const date = new Date().toISOString().slice(0, 10);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   await DailyLog.findOneAndUpdate(
-    { userId, date },
+    { userId, date: today },
     {
+      $setOnInsert: {
+        userId,
+        date: today,
+      },
       $push: {
         logs: {
           text,
           source: 'voice',
-          createdAt: new Date()
+          createdAt: new Date(),
         },
       },
     },
     {
       upsert: true,
-      new: true,
     }
   );
 };

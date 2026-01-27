@@ -25,7 +25,7 @@ const dailyLogSchema = new mongoose.Schema(
             index: true
         },
         date: {
-            type: String,
+            type: Date,
             required: true,
             index: true
         },
