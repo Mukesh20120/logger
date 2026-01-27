@@ -35,9 +35,35 @@ const createVoiceLog = async (req, res) => {
 
 const getList = async (req, res) => {
   const userId = req.userId;
-  if(!userId)throw new customError.UnAuthorizedError('Please login again.');
-  const list = await dailyLog.findOne({userId, date: "2026-01-16"});
-  res.status(StatusCodes.OK).json({success: true,message: 'User list fetch successfully', list})
-}
+  if (!userId) {
+    throw new customError.UnAuthorizedError('Please login again.');
+  }
+
+  const { days, date, from, to } = req.query;
+  let query = { userId };
+
+  if (date) {
+    query.date = new Date(date);
+  } else if (days) {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - Number(days));
+    query.date = { $gte: startDate };
+  } else if (from && to) {
+    query.date = {
+      $gte: new Date(from),
+      $lte: new Date(to),
+    };
+  }
+
+  const list = await dailyLog.find(query).sort({ date: -1 });
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: 'Logs fetched successfully',
+    days: list.length,
+    list,
+  });
+};
+
 
 module.exports = { createVoiceLog, getList };
