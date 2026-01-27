@@ -17,7 +17,6 @@ export default function LoginScreen({ navigation }: any) {
   const [password, setPassword] = useState("");
   const [url, setUrl] = useState(baseUrl);
   const [error, setError] = useState("");
-
   const handleLogin = async () => {
     try {
       const res = await loginApi(email, password, baseUrl);
