@@ -5,6 +5,7 @@ import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 import { useAuth } from '../context/AuthContext';
 import VoiceLogScreen from '../screens/VoiceLogScreen';
+import LogHistoryScreen from '../screens/LogHistoryScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -27,6 +28,7 @@ export default function AppNavigator() {
           <>
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="Voice" component={VoiceLogScreen} />
+            <Stack.Screen name="List" component={LogHistoryScreen} />
           </>
         )}
       </Stack.Navigator>
