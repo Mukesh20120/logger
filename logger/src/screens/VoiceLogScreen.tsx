@@ -7,24 +7,25 @@ import {
   PermissionsAndroid,
   Platform,
   Alert,
-  SafeAreaView,
   StatusBar,
 } from 'react-native';
-
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Sound, {
   RecordBackType,
   PlayBackType,
 } from 'react-native-nitro-sound';
 import { useAuth } from '../context/AuthContext';
+// Note: Install lucide-react-native if you haven't already
+import { ChevronLeft, Square, Play, RotateCcw, Send, Mic } from 'lucide-react-native';
 
-
-export default function VoiceLogScreen() {
+export default function VoiceLogScreen({ navigation }: any) {
   const { token, baseUrl } = useAuth();
   const API_URL = `${baseUrl}/log/voice`;
+  
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-
   const [recordPath, setRecordPath] = useState<string | null>(null);
+  
   const [recordSecs, setRecordSecs] = useState(0);
   const [playSecs, setPlaySecs] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -47,7 +48,7 @@ export default function VoiceLogScreen() {
         setRecordSecs(e.currentPosition);
       });
       const path = await Sound.startRecorder();
-      setRecordPath(path);
+      setRecordPath(null); // Reset path for new recording
       setIsRecording(true);
     } catch (err) {
       console.error('Start record error', err);
@@ -126,58 +127,80 @@ export default function VoiceLogScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
       
+      {/* Redesigned Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Voice Log</Text>
-        <Text style={styles.subtitle}>Record your thoughts</Text>
+        <TouchableOpacity onPress={() => navigation?.goBack()}>
+          <ChevronLeft color="#FFF" size={28} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Voice Log</Text>
+        <View style={{ width: 28 }} />
       </View>
 
-      <View style={styles.centerSection}>
-        {/* Status Indicators */}
-        <View style={styles.statusBadge}>
+      <View style={styles.mainContent}>
+        {/* Modern Status Badge */}
+        <View style={[styles.badge, isRecording && styles.badgeRecording]}>
           <View style={[styles.dot, isRecording && styles.dotRecording]} />
-          <Text style={styles.statusText}>
-            {isRecording ? 'RECORDING' : isPlaying ? 'PLAYING' : 'READY'}
+          <Text style={[styles.badgeText, isRecording && { color: '#0F172A' }]}>
+            {isRecording ? 'RECORDING' : recordPath ? 'FINISHED' : 'READY'}
           </Text>
         </View>
 
-        {/* Timer Display */}
+        {/* Improved Timer Display */}
         <Text style={styles.timerLarge}>
           {isRecording 
             ? Sound.mmssss(Math.floor(recordSecs)) 
             : recordPath 
-              ? `${Sound.mmssss(Math.floor(playSecs))} / ${Sound.mmssss(Math.floor(duration))}`
+              ? Sound.mmssss(Math.floor(playSecs))
               : "00:00"}
         </Text>
+        <Text style={styles.subText}>
+          {isRecording ? "Recording your thoughts..." : recordPath ? "Recording complete" : "Tap the mic to begin"}
+        </Text>
 
-        {/* The Main Action Button */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          style={[styles.micCircle, isRecording && styles.micRecording]}
-          onPress={isRecording ? onStopRecord : onStartRecord}
-        >
-          <View style={styles.micInner}>
-            <View style={isRecording ? styles.stopSquare : styles.recordCircle} />
-          </View>
-        </TouchableOpacity>
+        {/* Central Action Controls */}
+        <View style={styles.actionContainer}>
+          {isRecording ? (
+            <TouchableOpacity style={styles.stopOuterCircle} onPress={onStopRecord}>
+              <View style={styles.stopInnerCircle}>
+                <Square color="#FFF" fill="#FFF" size={28} />
+              </View>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.playbackRow}>
+              {/* Retry/Reset Button */}
+              {recordPath && (
+                <TouchableOpacity style={styles.sideBtn} onPress={() => setRecordPath(null)}>
+                  <RotateCcw color="#FFF" size={24} />
+                </TouchableOpacity>
+              )}
+
+              {/* Main Play or Start Button */}
+              <TouchableOpacity 
+                style={[styles.mainCircle, !recordPath && styles.micMode]} 
+                onPress={recordPath ? (isPlaying ? onStopPlay : onStartPlay) : onStartRecord}
+              >
+                {recordPath ? (
+                   isPlaying ? <Square color="#FFF" fill="#FFF" size={24} /> : <Play color="#FFF" fill="#FFF" size={32} />
+                ) : (
+                  <Mic color="#FFF" size={38} strokeWidth={1.5} />
+                )}
+              </TouchableOpacity>
+
+              {/* Spacer or additional action */}
+              {recordPath && <View style={{ width: 56 }} />}
+            </View>
+          )}
+          {recordPath && !isRecording && <Text style={styles.listenLabel}>Listen Back</Text>}
+        </View>
       </View>
 
-      {/* Footer Actions */}
+      {/* Primary Footer Action */}
       <View style={styles.footer}>
         {recordPath && !isRecording && (
-          <>
-            <TouchableOpacity 
-              style={styles.playbackBtn} 
-              onPress={isPlaying ? onStopPlay : onStartPlay}
-            >
-              <Text style={styles.playbackBtnText}>
-                {isPlaying ? 'Stop Preview' : 'Listen Back'}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.uploadBtn} onPress={uploadAudio}>
-              <Text style={styles.uploadText}>Send Voice Log</Text>
-            </TouchableOpacity>
-          </>
+          <TouchableOpacity style={styles.sendBtn} onPress={uploadAudio} activeOpacity={0.9}>
+            <Send color="#FFF" size={20} />
+            <Text style={styles.sendBtnText}>Send Voice Log</Text>
+          </TouchableOpacity>
         )}
       </View>
     </SafeAreaView>
@@ -185,127 +208,64 @@ export default function VoiceLogScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#020617',
+  container: { flex: 1, backgroundColor: '#0F172A' },
+  header: { 
+    flexDirection: 'row', justifyContent: 'space-between', 
+    alignItems: 'center', paddingHorizontal: 20, paddingTop: 10 
   },
-  header: {
-    marginTop: 40,
-    alignItems: 'center',
+  headerTitle: { color: '#FFF', fontSize: 18, fontWeight: '600' },
+  mainContent: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  
+  // Badge
+  badge: { 
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#1E293B', 
+    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, marginBottom: 30 
   },
-  title: {
-    color: '#fff',
-    fontSize: 28,
-    fontWeight: '800',
-    letterSpacing: 0.5,
+  badgeRecording: { backgroundColor: '#FFF' },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#94A3B8', marginRight: 8 },
+  dotRecording: { backgroundColor: '#ef4444' },
+  badgeText: { fontSize: 12, fontWeight: '800', letterSpacing: 1, color: '#94A3B8' },
+
+  // Timer
+  timerLarge: { 
+    color: '#FFF', fontSize: 72, fontWeight: '200', 
+    fontVariant: ['tabular-nums'], letterSpacing: 2 
   },
-  subtitle: {
-    color: '#64748b',
-    fontSize: 16,
-    marginTop: 4,
+  subText: { color: '#64748B', fontSize: 16, marginTop: 10 },
+
+  // Controls
+  actionContainer: { marginTop: 60, alignItems: 'center', width: '100%' },
+  stopOuterCircle: { 
+    width: 120, height: 120, borderRadius: 60, 
+    borderWidth: 2, borderColor: '#ef4444', 
+    justifyContent: 'center', alignItems: 'center' 
   },
-  centerSection: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  stopInnerCircle: { 
+    width: 80, height: 80, borderRadius: 40, 
+    backgroundColor: '#ef4444', justifyContent: 'center', alignItems: 'center' 
   },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1e293b',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginBottom: 20,
+  playbackRow: { 
+    flexDirection: 'row', alignItems: 'center', 
+    justifyContent: 'center', width: '100%', gap: 30
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#94a3b8',
-    marginRight: 8,
+  mainCircle: { 
+    width: 90, height: 90, borderRadius: 45, 
+    backgroundColor: '#ef4444', justifyContent: 'center', alignItems: 'center',
+    shadowColor: '#ef4444', shadowOpacity: 0.3, shadowRadius: 15, elevation: 5
   },
-  dotRecording: {
-    backgroundColor: '#ef4444',
+  micMode: { backgroundColor: '#22c55e', shadowColor: '#22c55e' },
+  sideBtn: { 
+    width: 56, height: 56, borderRadius: 28, 
+    backgroundColor: '#1E293B', justifyContent: 'center', alignItems: 'center' 
   },
-  statusText: {
-    color: '#cbd5e1',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
+  listenLabel: { color: '#64748B', marginTop: 15, fontSize: 14, fontWeight: '500' },
+
+  // Footer
+  footer: { paddingHorizontal: 24, paddingBottom: 40, height: 100, justifyContent: 'center' },
+  sendBtn: { 
+    backgroundColor: '#3b82f6', flexDirection: 'row', 
+    paddingVertical: 18, borderRadius: 16, 
+    justifyContent: 'center', alignItems: 'center' 
   },
-  timerLarge: {
-    color: '#fff',
-    fontSize: 54,
-    fontWeight: '300',
-    fontVariant: ['tabular-nums'],
-    marginBottom: 40,
-  },
-  micCircle: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: 'rgba(34, 197, 94, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#22c55e',
-  },
-  micRecording: {
-    borderColor: '#ef4444',
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
-  },
-  micInner: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#22c55e',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  recordCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#fff',
-  },
-  stopSquare: {
-    width: 25,
-    height: 25,
-    borderRadius: 4,
-    backgroundColor: '#fff',
-  },
-  footer: {
-    padding: 24,
-    gap: 12,
-  },
-  playbackBtn: {
-    paddingVertical: 16,
-    alignItems: 'center',
-    borderRadius: 14,
-    backgroundColor: '#1e293b',
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  playbackBtnText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  uploadBtn: {
-    paddingVertical: 18,
-    alignItems: 'center',
-    borderRadius: 14,
-    backgroundColor: '#3b82f6',
-    shadowColor: '#3b82f6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  uploadText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-  },
+  sendBtnText: { color: '#FFF', fontSize: 16, fontWeight: '700', marginLeft: 12 }
 });
