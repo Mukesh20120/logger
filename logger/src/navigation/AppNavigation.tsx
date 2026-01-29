@@ -1,10 +1,10 @@
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import LoginScreen from "../screens/LoginScreen";
-import RegisterScreen from "../screens/RegisterScreen";
-import HomeScreen from "../screens/HomeScreen";
-import { useAuth } from "../context/AuthContext";
-import VoiceLogScreen from "../screens/VoiceLogScreen";
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
+import HomeScreen from '../screens/HomeScreen';
+import { useAuth } from '../context/AuthContext';
+import VoiceLogScreen from '../screens/VoiceLogScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -13,7 +13,11 @@ export default function AppNavigator() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
         {!token ? (
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
