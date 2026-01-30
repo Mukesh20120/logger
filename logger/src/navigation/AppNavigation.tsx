@@ -6,6 +6,9 @@ import HomeScreen from '../screens/HomeScreen';
 import { useAuth } from '../context/AuthContext';
 import VoiceLogScreen from '../screens/VoiceLogScreen';
 import LogHistoryScreen from '../screens/LogHistoryScreen';
+import { QueryClientProvider } from '@tanstack/react-query';
+import {queryClient} from '../utils/queryClient'
+import Toast from 'react-native-toast-message';
 
 const Stack = createNativeStackNavigator();
 
@@ -13,6 +16,8 @@ export default function AppNavigator() {
   const { token } = useAuth();
 
   return (
+    <>
+    <QueryClientProvider client={queryClient}>
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
@@ -33,5 +38,8 @@ export default function AppNavigator() {
         )}
       </Stack.Navigator>
     </NavigationContainer>
+    </QueryClientProvider>
+    <Toast/>
+    </>
   );
 }

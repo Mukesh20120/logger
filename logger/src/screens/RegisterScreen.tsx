@@ -12,24 +12,45 @@ import {
 import { registerApi } from "../api/auth.api";
 import { useAuth } from "../context/AuthContext";
 import { UserPlus, Mail, Lock, ArrowRight, ChevronLeft } from "lucide-react-native";
+import { useMutation } from "@tanstack/react-query";
+import Toast from "react-native-toast-message";
 
 export default function RegisterScreen({ navigation }: any) {
   const { baseUrl } = useAuth();
   const [email, setEmail] = useState("");
+  const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
   const [isFocused, setIsFocused] = useState<string | null>(null);
 
+  const registerMutation = useMutation({
+  mutationFn: registerApi,
+
+  onSuccess: () => {
+    Toast.show({
+      type: 'success',
+      text1: 'Account created 🎉',
+      text2: 'You can now log in',
+    });
+
+    // Navigate after short delay so user sees the toast
+    setTimeout(() => {
+      navigation.navigate('Login');
+    }, 1200);
+  },
+
+  onError: (error: any) => {
+    Toast.show({
+      type: 'error',
+      text1: 'Registration failed',
+      text2: error.message || 'Please try again',
+    });
+  },
+});
+
   const handleRegister = async () => {
-    setMsg("");
-    try {
-      await registerApi(email, password, baseUrl);
-      setMsg("Registered successfully!");
-      setTimeout(() => navigation.navigate("Login"), 1500);
-    } catch (err) {
-      console.log('something went wrong', err);
-      setMsg("Registration failed. Try again.");
-    }
+    if(!!userName && !!email && !!password && baseUrl)
+    registerMutation.mutate({userName,email,password,baseUrl})
   };
 
   return (
@@ -55,7 +76,21 @@ export default function RegisterScreen({ navigation }: any) {
           <Text style={styles.subtitle}>Join us to start logging your thoughts</Text>
         </View>
 
-        <View style={styles.form}>
+           {/* User Name Input */}
+          <Text style={styles.label}>User Name</Text>
+          <View style={[styles.inputWrapper, isFocused === 'userName' && styles.inputFocused]}>
+            <TextInput
+              placeholder="london | nika"
+              placeholderTextColor="#64748b"
+              style={styles.input}
+              onChangeText={setUserName}
+              onFocus={() => setIsFocused('userName')}
+              onBlur={() => setIsFocused(null)}
+              autoCapitalize="none"
+            />
+          </View>
+
+       <View style={styles.form}>
           {/* Email Input */}
           <Text style={styles.label}>Email Address</Text>
           <View style={[styles.inputWrapper, isFocused === 'email' && styles.inputFocused]}>

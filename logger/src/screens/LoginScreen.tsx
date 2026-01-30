@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   TextInput,
@@ -12,27 +12,70 @@ import {
 import { loginApi } from "../api/auth.api";
 import { useAuth } from "../context/AuthContext";
 import { Mail, Lock, Globe, ArrowRight, UserPlus } from "lucide-react-native";
+import { useMutation } from "@tanstack/react-query";
+import Toast from "react-native-toast-message";
+import { toast } from "../utils/toast";
 
 export default function LoginScreen({ navigation }: any) {
   const { login, baseUrl, storeBaseUrl } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [url, setUrl] = useState(baseUrl);
-  const [error, setError] = useState("");
   const [isFocused, setIsFocused] = useState<string | null>(null);
 
-  const handleLogin = async () => {
-    setError("");
-    try {
-      // Automatically save URL when logging in to ensure the latest is used
-      storeBaseUrl(url);
-      const res = await loginApi(email, password, url);
-      login(res.accessToken);
-    } catch (err) {
-      setError("Invalid credentials. Please try again.");
-    }
-  };
 
+const loginMutation = useMutation({
+  mutationFn: loginApi,
+
+  onSuccess: async (data) => {
+
+    // Store token in auth context
+    login(data.accessToken);
+
+    Toast.show({
+      type: 'success',
+      text1: 'Welcome back 👋',
+      text2: 'Login successful',
+    });
+  },
+
+  onError: (error: any) => {
+
+    Toast.show({
+      type: 'error',
+      text1: 'Login failed',
+      text2: error.message || 'Invalid credentials',
+    });
+  },
+});
+
+const handleLogin = () => {
+  if (!email || !password || !url) {
+    Toast.show({
+      type: 'error',
+      text1: 'Please provide require data.'
+    })
+    return;
+  }
+
+  loginMutation.mutate({
+    email,
+    password,
+    baseUrl: url,
+  });
+};
+
+const handleSaveUrl = () =>{
+   storeBaseUrl(url);
+}
+
+useEffect(()=>{
+  (async()=>{
+  const res = await fetch('http://localhost:5000');
+  const data = await res.json();
+  toast.success(JSON.stringify(data));
+  })();
+},[]);
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
@@ -80,6 +123,19 @@ export default function LoginScreen({ navigation }: any) {
             />
           </View>
 
+          <TouchableOpacity style={styles.loginButton} onPress={handleLogin} activeOpacity={0.8}>
+            <Text style={styles.loginButtonText}>Sign In</Text>
+            <ArrowRight color="#fff" size={20} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.registerButton}
+            onPress={() => navigation.navigate("Register")}
+          >
+            <Text style={styles.registerText}>
+              Don't have an account? <Text style={styles.registerLink}>Sign Up</Text>
+            </Text>
+          </TouchableOpacity>
           {/* Base URL Input - Styled as a secondary settings section */}
           <View style={styles.dividerRow}>
             <View style={styles.divider} />
@@ -100,21 +156,11 @@ export default function LoginScreen({ navigation }: any) {
             />
           </View>
 
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin} activeOpacity={0.8}>
-            <Text style={styles.loginButtonText}>Sign In</Text>
+          <TouchableOpacity style={styles.loginButton} onPress={handleSaveUrl} activeOpacity={0.8}>
+            <Text style={styles.loginButtonText}>Save Url</Text>
             <ArrowRight color="#fff" size={20} />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.registerButton}
-            onPress={() => navigation.navigate("Register")}
-          >
-            <Text style={styles.registerText}>
-              Don't have an account? <Text style={styles.registerLink}>Sign Up</Text>
-            </Text>
-          </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
     </View>
