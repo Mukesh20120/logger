@@ -15,6 +15,7 @@ import { Mail, Lock, Globe, ArrowRight, UserPlus } from "lucide-react-native";
 import { useMutation } from "@tanstack/react-query";
 import Toast from "react-native-toast-message";
 import { toast } from "../utils/toast";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginScreen({ navigation }: any) {
   const { login, baseUrl, storeBaseUrl } = useAuth();
@@ -30,7 +31,15 @@ const loginMutation = useMutation({
   onSuccess: async (data) => {
 
     // Store token in auth context
-    login(data.accessToken);
+    const {accessToken=null, refreshToken=null, user={_id: null, email:null, userName: null}} = data;
+    const newAuthToStore = {
+      user: {id: user._id, email: user.email, userName: user.userName},
+      accessToken,
+      refreshToken,
+      loading: false
+    }
+    await AsyncStorage.setItem('storedAuth', JSON.stringify(newAuthToStore));
+    login(newAuthToStore);
 
     Toast.show({
       type: 'success',
@@ -67,15 +76,16 @@ const handleLogin = () => {
 
 const handleSaveUrl = () =>{
    storeBaseUrl(url);
+   toast.success('URL Saved.')
 }
 
-useEffect(()=>{
-  (async()=>{
-  const res = await fetch('http://localhost:5000');
-  const data = await res.json();
-  toast.success(JSON.stringify(data));
-  })();
-},[]);
+// useEffect(()=>{
+//   (async()=>{
+//   const res = await fetch('http://192.168.0.117:5000');
+//   toast.success(JSON.stringify(res));
+//   })();
+// },[]);
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />

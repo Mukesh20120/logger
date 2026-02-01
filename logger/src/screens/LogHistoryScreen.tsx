@@ -15,13 +15,14 @@ import {
   MessageSquare,
   ChevronRight,
   Filter,
+  ChevronLeft,
 } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { DailyLog } from '../utils/type';
 import { useQuery } from '@tanstack/react-query';
 import { fetchLogs } from '../api/log.api';
 
-export default function LogHistoryScreen() {
+export default function LogHistoryScreen({ navigation }: any) {
   const { token, baseUrl } = useAuth();
   const [filter, setFilter] = useState('7'); // '7', '30', or 'custom'
 
@@ -107,8 +108,12 @@ export default function LogHistoryScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+     {/* Redesigned Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Activity Logs</Text>
+        <TouchableOpacity onPress={() => navigation?.goBack()}>
+          <ChevronLeft color="#FFF" size={28} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Activity Log</Text>
         <TouchableOpacity style={styles.filterBtn}>
           <Filter size={20} color="#3b82f6" />
         </TouchableOpacity>
@@ -139,7 +144,6 @@ export default function LogHistoryScreen() {
         <FlatList
           data={logs}
           renderItem={renderLogItem}
-          onRefresh={refetch}
           keyExtractor={item => item._id}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
@@ -163,6 +167,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
+  headerContainer: { flexDirection: 'column' },
   headerTitle: { color: '#FFF', fontSize: 24, fontWeight: '800' },
   filterBtn: { padding: 8, backgroundColor: '#1E293B', borderRadius: 10 },
 
@@ -220,6 +225,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logInfo: { flex: 1, marginLeft: 15 },
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    zIndex: 10,
+  },
   logText: {
     color: '#F1F5F9',
     fontSize: 16,
