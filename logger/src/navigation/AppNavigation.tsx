@@ -9,11 +9,16 @@ import LogHistoryScreen from '../screens/LogHistoryScreen';
 import { QueryClientProvider } from '@tanstack/react-query';
 import {queryClient} from '../utils/queryClient'
 import Toast from 'react-native-toast-message';
+import SplashScreen from '../screens/SplashScreen';
 
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
-  const { token } = useAuth();
+  const { token, auth } = useAuth();
+ console.log(JSON.stringify(auth));
+if (auth && auth.loading) {
+  return <SplashScreen />;
+}
 
   return (
     <>
@@ -24,7 +29,7 @@ export default function AppNavigator() {
           headerShown: false,
         }}
       >
-        {!token ? (
+        {!auth?.accessToken ? (
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
