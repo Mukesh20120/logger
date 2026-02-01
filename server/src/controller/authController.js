@@ -50,7 +50,7 @@ const login = asyncWrapper(async (req, res) => {
 
   res
     .status(StatusCodes.OK)
-    .json({ message: "login successfully", accessToken, user: loginUser });
+    .json({ message: "login successfully", accessToken, refreshToken, user: loginUser });
 });
 
 const refreshTokencontroller = asyncWrapper(async (req,res)=>{
