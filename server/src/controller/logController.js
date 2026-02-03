@@ -65,5 +65,79 @@ const getList = async (req, res) => {
   });
 };
 
+const editLog = async (req, res) => {
+  const userId = req.userId;
+  const { dailyLogId, logId } = req.params;
+  const { text, source } = req.body;
 
-module.exports = { createVoiceLog, getList };
+  if (!text && !source) {
+    return res.status(400).json({
+      message: "Nothing to update",
+    });
+  }
+
+  const updateFields = {};
+  if (text) updateFields["logs.$.text"] = text;
+  if (source) updateFields["logs.$.source"] = source;
+
+  const updatedLog = await dailyLog.findOneAndUpdate(
+    {
+      _id: dailyLogId,
+      userId,
+      "logs._id": logId,
+    },
+    {
+      $set: updateFields,
+    },
+    {
+      new: true,
+    }
+  );
+
+  if (!updatedLog) {
+    return res.status(404).json({
+      message: "Log not found",
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Log updated successfully",
+    data: updatedLog,
+  });
+};
+
+const deleteLog = async (req, res) => {
+  const userId = req.userId;
+  const { dailyLogId, logId } = req.params;
+
+  const deletedLog = await dailyLog.findOneAndUpdate(
+    {
+      _id: dailyLogId,
+      userId,
+    },
+    {
+      $pull: {
+        logs: { _id: logId },
+      },
+    },
+    {
+      new: true,
+    }
+  );
+
+  if (!deletedLog) {
+    return res.status(404).json({
+      message: "Log not found",
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Log deleted successfully",
+    data: deletedLog,
+  });
+};
+
+
+module.exports = { createVoiceLog, getList, editLog, deleteLog };
