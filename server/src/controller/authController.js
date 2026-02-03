@@ -54,19 +54,27 @@ const login = asyncWrapper(async (req, res) => {
 });
 
 const refreshTokencontroller = asyncWrapper(async (req,res)=>{
-   const token = req.cookies.refreshToken;
+    let token;
+    token = req.cookies.refreshToken;
+    const {refreshToken} = req.body || {};
+    if(refreshToken)token=refreshToken;
+
    if(!token){
     throw new customError.UnAuthenticatedError('Login again.');
    }
    const user = await UserModel.findOne({refreshToken: token});
+
    if(!user){
      throw new customError.UnAuthorizedError('User not found');
    }
+
    jwt.verify(token, keys.REFRESH_SECRET, (err, decode)=>{
     if(err)
      throw new customError.UnAuthorizedError('User not found');
-    const accessToken = generateAccessToken(user._id);
-    return res.status(StatusCodes.OK).json({message: 'New access token generated successfully.', accessToken});
+    
+    const accessTkn = generateAccessToken(user._id);
+    const refreshTkn = generateRefreshToken(user._id);
+    return res.status(StatusCodes.OK).json({message: 'New access token generated successfully.', accessToken: accessTkn, refreshToken: refreshTkn});
    })
 })
 
