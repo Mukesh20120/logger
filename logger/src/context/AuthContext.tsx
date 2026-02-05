@@ -12,7 +12,6 @@ const defaultAuth: AuthState = {
   }
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [token, setToken] = useState<string | null>(null);
   const [auth, setAuth] = useState<AuthState>(defaultAuth)
   // const [baseUrl, setBaseUrl] = useState<string | undefined>("http://192.168.0.117:5000/api/v1");
   const [baseUrl, setBaseUrl] = useState<string | undefined>("https://8e70f3d2a8e2.ngrok-free.app/api/v1");
@@ -20,38 +19,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(()=>{
     const bootstrap = async ()=>{
          try{
-          const storedAuth = JSON.parse(await AsyncStorage.getItem('storedAuth') || '{}');
+          const storedAuthStr = await AsyncStorage.getItem('storedAuth');
+          const storedBaseUrlStr = await AsyncStorage.getItem('storedBaseUrl');
+          const storedAuth = storedAuthStr ? JSON.parse(storedAuthStr) : {};
 
           if(storedAuth && storedAuth.accessToken){
             setAuth({...storedAuth,loading: false});
-            setToken(storedAuth.accessToken);
+          }
+          if(storedBaseUrlStr){
+            setBaseUrl(storedBaseUrlStr);
           }
          }catch{
            console.log('Something went wrong with AsyncStorage');
          }finally{
-           setAuth((s)=>({...s,loading: false}));
+            setAuth(prev=>({...prev, loading: false}));
          }
-    }
+        }
     bootstrap();
   },[]);
 
   const login = (authState: AuthState) => {
      setAuth(authState);
-     setToken(authState.accessToken);
   };
 
-  const storeBaseUrl = (url: string | undefined) => {
+  const storeBaseUrl = async(url: string | undefined) => {
      setBaseUrl(url);
+     if(url)
+       await AsyncStorage.setItem('storedBaseUrl', url);
   }
 
   const logout = async () => {
-    setToken(null);
     setAuth({...defaultAuth, loading: false});
     await AsyncStorage.removeItem('storedAuth');
   };
 
   return (
-    <AuthContext.Provider value={{baseUrl, token, login, logout, storeBaseUrl,auth }}>
+    <AuthContext.Provider value={{baseUrl, token: auth.accessToken, login, logout, storeBaseUrl,auth }}>
       {children}
     </AuthContext.Provider>
   );

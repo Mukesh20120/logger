@@ -63,3 +63,61 @@ export const uploadAudio = async ({
   return res.json();
 };
 
+
+export const updateLogApi = async ({
+logId,
+dayId,
+text,
+token,
+baseUrl,
+source='manual'
+}: {
+  logId: string;
+  dayId: string;
+  text: string;
+  source?: string;
+  token: string | null;
+  baseUrl: string | undefined;
+}) => {
+  const data = {text, source}
+  const res = await fetch(`${baseUrl}/log/${dayId}/${logId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json', // ✅ REQUIRED
+    },
+   body: JSON.stringify(data)
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to Update');
+  }
+  return res.json();
+};
+
+
+export const deleteLogApi = async ({
+logId,
+dayId,
+token,
+baseUrl,
+}: {
+  logId: string;
+  dayId: string;
+  token: string | null;
+  baseUrl: string | undefined;
+}) => {
+  const res = await fetch(`${baseUrl}/log/${dayId}/${logId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error('Upload failed');
+  }
+
+  return res.json();
+};
+

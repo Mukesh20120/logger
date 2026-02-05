@@ -85,8 +85,11 @@ export default function LogHistoryScreen({ navigation }: any) {
             )}
           </View>
 
-          <View style={styles.logInfo}>
-            <Text style={styles.logText} numberOfLines={1}>
+          <TouchableOpacity onPress={()=>{navigation.navigate('LogDetails',{
+            log,
+            dayId: item._id
+          })}} style={styles.logInfo}>
+            <Text style={styles.logText}>
               {log.text || 'Voice log (No transcript)'}
             </Text>
             <View style={styles.timeRow}>
@@ -98,7 +101,7 @@ export default function LogHistoryScreen({ navigation }: any) {
                 })}
               </Text>
             </View>
-          </View>
+          </TouchableOpacity>
 
           <ChevronRight size={18} color="#334155" />
         </View>

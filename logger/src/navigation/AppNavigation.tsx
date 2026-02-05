@@ -10,6 +10,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import {queryClient} from '../utils/queryClient'
 import Toast from 'react-native-toast-message';
 import SplashScreen from '../screens/SplashScreen';
+import LogDetailScreen from '../screens/LogDetailScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -39,6 +40,7 @@ if (auth && auth.loading) {
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="Voice" component={VoiceLogScreen} />
             <Stack.Screen name="List" component={LogHistoryScreen} />
+            <Stack.Screen name="LogDetails" component={LogDetailScreen} />
           </>
         )}
       </Stack.Navigator>

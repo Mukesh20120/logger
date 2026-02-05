@@ -1,5 +1,6 @@
 // Types based on your API response
 export interface LogEntry {
+  _id?: string
   text: string;
   source: string;
   createdAt: string;
