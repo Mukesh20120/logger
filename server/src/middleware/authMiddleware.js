@@ -5,7 +5,7 @@ const asyncWrapper = require('./asyncWrapper');
 
 const authMiddleware = asyncWrapper((req, res, next) => {
     const authHeader = req.headers.authorization;
-    if(!authHeader)throw new customError.UnAuthorizedError('Unauthenticated user');
+    if(!authHeader)throw new customError.UnAuthenticatedError('Token in header not found.');
 
     const token = authHeader.split(' ')[1];
 

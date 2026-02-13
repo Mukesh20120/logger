@@ -14,7 +14,7 @@ const logItemSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     }
-},{_id: false});
+});
 
 const dailyLogSchema = new mongoose.Schema(
     {
@@ -25,7 +25,7 @@ const dailyLogSchema = new mongoose.Schema(
             index: true
         },
         date: {
-            type: String,
+            type: Date,
             required: true,
             index: true
         },

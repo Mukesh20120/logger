@@ -35,9 +35,109 @@ const createVoiceLog = async (req, res) => {
 
 const getList = async (req, res) => {
   const userId = req.userId;
-  if(!userId)throw new customError.UnAuthorizedError('Please login again.');
-  const list = await dailyLog.findOne({userId, date: "2026-01-16"});
-  res.status(StatusCodes.OK).json({success: true,message: 'User list fetch successfully', list})
-}
+  if (!userId) {
+    throw new customError.UnAuthorizedError('Please login again.');
+  }
 
-module.exports = { createVoiceLog, getList };
+  const { days, date, from, to } = req.query;
+  let query = { userId };
+
+  if (date) {
+    query.date = new Date(date);
+  } else if (days) {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - Number(days));
+    query.date = { $gte: startDate };
+  } else if (from && to) {
+    query.date = {
+      $gte: new Date(from),
+      $lte: new Date(to),
+    };
+  }
+
+  const list = await dailyLog.find(query).sort({ date: -1 });
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: 'Logs fetched successfully',
+    days: list.length,
+    list,
+  });
+};
+
+const editLog = async (req, res) => {
+  const userId = req.userId;
+  const { dailyLogId, logId } = req.params;
+  const { text, source } = req.body;
+
+  if (!text && !source) {
+    return res.status(400).json({
+      message: "Nothing to update",
+    });
+  }
+
+  const updateFields = {};
+  if (text) updateFields["logs.$.text"] = text;
+  if (source) updateFields["logs.$.source"] = source;
+
+  const updatedLog = await dailyLog.findOneAndUpdate(
+    {
+      _id: dailyLogId,
+      userId,
+      "logs._id": logId,
+    },
+    {
+      $set: updateFields,
+    },
+    {
+      new: true,
+    }
+  );
+
+  if (!updatedLog) {
+    return res.status(404).json({
+      message: "Log not found",
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Log updated successfully",
+    data: updatedLog,
+  });
+};
+
+const deleteLog = async (req, res) => {
+  const userId = req.userId;
+  const { dailyLogId, logId } = req.params;
+
+  const deletedLog = await dailyLog.findOneAndUpdate(
+    {
+      _id: dailyLogId,
+      userId,
+    },
+    {
+      $pull: {
+        logs: { _id: logId },
+      },
+    },
+    {
+      new: true,
+    }
+  );
+
+  if (!deletedLog) {
+    return res.status(404).json({
+      message: "Log not found",
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Log deleted successfully",
+    data: deletedLog,
+  });
+};
+
+
+module.exports = { createVoiceLog, getList, editLog, deleteLog };
