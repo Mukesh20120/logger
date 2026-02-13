@@ -5,6 +5,7 @@ const { StatusCodes } = require("http-status-codes");
 const { generateAccessToken, generateRefreshToken } = require("../utils/token");
 const jwt = require('jsonwebtoken');
 const keys = require("../config/keys");
+const { logger } = require("../utils/log");
 
 const register = asyncWrapper(async (req, res) => {
   const { userName, email, password } = req.body;
@@ -47,7 +48,7 @@ const login = asyncWrapper(async (req, res) => {
     sameSite: 'strict',
     maxAge: 7 * 24 * 60 * 60 * 1000
   })
-
+ logger.log('info', `login api hit with ${email}`);
   res
     .status(StatusCodes.OK)
     .json({ message: "login successfully", accessToken, refreshToken, user: loginUser });
