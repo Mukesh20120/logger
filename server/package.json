@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "worker": "node worker/transcript.worker.js"
+    "worker": "node worker/transcript.worker.js",
+    "backend": "concurrently \"npm start\" \"npm run worker\""
   },
   "keywords": [],
   "author": "",
@@ -15,6 +16,7 @@
   "dependencies": {
     "bcrypt": "^6.0.0",
     "bullmq": "^5.66.5",
+    "concurrently": "^9.2.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",

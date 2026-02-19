@@ -1,6 +1,36 @@
 version: "3.9"
 
 services:
+  app:
+    build: .
+    container_name: logger-app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+      - redis
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: node server.js
+
+  worker:
+    build: .
+    container_name: logger-worker
+    restart: unless-stopped
+    depends_on:
+      - mongo
+      - redis
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: node worker/transcript.worker.js
+
   mongo:
     image: mongo:7
     container_name: logger-mongo
