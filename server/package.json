@@ -4,9 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon server.js",
+    "dev:api": "nodemon server.js",
+    "dev:worker": "nodemon worker/index.js",
     "start": "node server.js",
-    "worker": "node worker/transcript.worker.js"
+    "worker": "node worker/index.js",
+    "backend": "concurrently \"npm start\" \"npm run worker\""
   },
   "keywords": [],
   "author": "",
@@ -15,6 +17,7 @@
   "dependencies": {
     "bcrypt": "^6.0.0",
     "bullmq": "^5.66.5",
+    "concurrently": "^9.2.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -27,6 +30,7 @@
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "nodemon": "^3.1.10",
+    "openai": "^6.24.0",
     "uuid": "^13.0.0",
     "validator": "^13.15.15",
     "winston": "^3.19.0"

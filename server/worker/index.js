@@ -1,37 +1,65 @@
-const express = require('express');
-const cors = require('cors');
-const {logger} = require('../src/utils/log')
+const fs = require("fs");
+const path = require("path");
+const { Worker } = require("bullmq");
+const { TRANSCIPT_QUEUE } = require('../infra/queue/transcription.queue');
+const { connection } = require('../infra/redis/redis');
+const { transcribeWithWhisper } = require("../src/module/whisper/whisperService");
+const keys = require("../src/config/keys");
+const { saveLogForUser } = require("./service/logPersist");
+const connectDB = require("../src/db/connect");
+const { transcriptByOpenAi } = require("../src/module/openAi");
 
-const keys = require('../src/config/keys');
+console.log("🧠 Transcription worker started");
 
-const app = express();
-const connectDB = require('../src/db/connect');
+const worker = new Worker(
+  TRANSCIPT_QUEUE,
+  async (job) => {
+    const { audioPath, id, userId } = job.data;
 
-// middleware
-app.use(cors());
-app.use(express.json());
+    console.log(`🎧 Processing job ${id}`);
 
-app.get('/', (req,res)=>{
-  logger.info('Server is working fine. :)')
-    res.send("server is working...");
-})
-app.use('/api/v1/auth',authRouter);
-app.use('/api/v1/log',authMiddleware,logRouter);
+    try {
+      /**
+       * Transcript using the whisper install in the locally 
+       */
+      // const audioBuffer = fs.readFileSync(audioPath);
+      // const text = await transcribeWithWhisper(audioBuffer, "audio/m4a");
+
+      //using the openAI api for the transcription
+      const text = await transcriptByOpenAi({ path: audioPath });
+
+      console.log(`📝 Transcription (${id}):`, text, userId);
+
+      await saveLogForUser({ userId, text });
+
+      fs.unlinkSync(audioPath);
+
+      return { text };
+    } catch (err) {
+      console.error(`❌ Job failed (${id})`, err);
+      throw err;
+    }
+  },
+  { connection }
+);
+
+worker.on("completed", (job) => {
+  console.log(`✅ Job completed: ${job.id}`);
+});
+
+worker.on("failed", (job, err) => {
+  console.error(`❌ Job failed: ${job.id}`, err);
+});
 
 const start = async () => {
   try {
-    if(keys.MONGODB_URL){
+    if (keys.MONGODB_URL) {
       await connectDB(keys.MONGODB_URL);
       console.log('connected to DB.')
     }
-    app.listen(keys.PORT, () =>
-      console.log(`Server is listening on port ${keys.PORT}...`)
-    );
   } catch (error) {
     console.log(error);
   }
 };
 
 start();
-
-
