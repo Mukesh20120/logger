@@ -7,4 +7,5 @@ module.exports = {
     JWT_SECRET: process.env.JWT_SECRET,
     ACCESS_SECRET: process.env.ACCESS_SECRET,
     REFRESH_SECRET: process.env.REFRESH_SECRET,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
 }
