@@ -1,13 +1,13 @@
+import { baseUrl } from '../utils/config';
 
 export const loginApi = async ({
   email,
   password,
-  baseUrl,
 }: {
   email: string;
   password: string;
-  baseUrl: string;
 }) => {
+  console.log({ email, password, baseUrl });
   const res = await fetch(`${baseUrl}/auth/login`, {
     method: 'POST',
     headers: {
@@ -29,12 +29,10 @@ export const registerApi = async ({
   userName,
   email,
   password,
-  baseUrl,
 }: {
-  userName: string,
+  userName: string;
   email: string;
   password: string;
-  baseUrl: string;
 }) => {
   const res = await fetch(`${baseUrl}/auth/register`, {
     method: 'POST',
@@ -52,4 +50,3 @@ export const registerApi = async ({
 
   return data;
 };
-

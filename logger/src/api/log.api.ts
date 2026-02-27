@@ -1,14 +1,13 @@
-import { DailyLog } from "../utils/type";
+import { baseUrl } from '../utils/config';
+import { DailyLog } from '../utils/type';
 import { Platform } from 'react-native';
 
 export const fetchLogs = async ({
   days,
   token,
-  baseUrl,
 }: {
   days: string;
   token: string;
-  baseUrl: string;
 }): Promise<DailyLog[]> => {
   const res = await fetch(`${baseUrl}/log/list?days=${days}`, {
     headers: {
@@ -25,14 +24,10 @@ export const fetchLogs = async ({
   return data.list;
 };
 
-
-
 export const uploadAudio = async ({
-  baseUrl,
   recordPath,
   token,
 }: {
-  baseUrl: string;
   recordPath: string;
   token: string;
 }) => {
@@ -63,30 +58,27 @@ export const uploadAudio = async ({
   return res.json();
 };
 
-
 export const updateLogApi = async ({
-logId,
-dayId,
-text,
-token,
-baseUrl,
-source='manual'
+  logId,
+  dayId,
+  text,
+  token,
+  source = 'manual',
 }: {
   logId: string;
   dayId: string;
   text: string;
   source?: string;
   token: string | null;
-  baseUrl: string | undefined;
 }) => {
-  const data = {text, source}
+  const data = { text, source };
   const res = await fetch(`${baseUrl}/log/${dayId}/${logId}`, {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json', // ✅ REQUIRED
     },
-   body: JSON.stringify(data)
+    body: JSON.stringify(data),
   });
 
   if (!res.ok) {
@@ -95,17 +87,14 @@ source='manual'
   return res.json();
 };
 
-
 export const deleteLogApi = async ({
-logId,
-dayId,
-token,
-baseUrl,
+  logId,
+  dayId,
+  token,
 }: {
   logId: string;
   dayId: string;
   token: string | null;
-  baseUrl: string | undefined;
 }) => {
   const res = await fetch(`${baseUrl}/log/${dayId}/${logId}`, {
     method: 'DELETE',
@@ -120,4 +109,3 @@ baseUrl,
 
   return res.json();
 };
-

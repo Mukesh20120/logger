@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import {
   View,
   TextInput,
@@ -8,89 +8,77 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
-} from "react-native";
-import { loginApi } from "../api/auth.api";
-import { useAuth } from "../context/AuthContext";
-import { Mail, Lock, Globe, ArrowRight, UserPlus } from "lucide-react-native";
-import { useMutation } from "@tanstack/react-query";
-import Toast from "react-native-toast-message";
-import { toast } from "../utils/toast";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+} from 'react-native';
+import { loginApi } from '../api/auth.api';
+import { useAuth } from '../context/AuthContext';
+import { Mail, Lock, Globe, ArrowRight, UserPlus } from 'lucide-react-native';
+import { useMutation } from '@tanstack/react-query';
+import Toast from 'react-native-toast-message';
+import { toast } from '../utils/toast';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen({ navigation }: any) {
-  const { login, baseUrl, storeBaseUrl } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [url, setUrl] = useState(baseUrl);
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isFocused, setIsFocused] = useState<string | null>(null);
 
+  const loginMutation = useMutation({
+    mutationFn: loginApi,
 
-const loginMutation = useMutation({
-  mutationFn: loginApi,
+    onSuccess: async data => {
+      // Store token in auth context
+      const {
+        accessToken = null,
+        refreshToken = null,
+        user = { _id: null, email: null, userName: null },
+      } = data;
+      const newAuthToStore = {
+        user: { id: user._id, email: user.email, userName: user.userName },
+        accessToken,
+        refreshToken,
+        loading: false,
+      };
+      await AsyncStorage.setItem('storedAuth', JSON.stringify(newAuthToStore));
+      login(newAuthToStore);
 
-  onSuccess: async (data) => {
+      Toast.show({
+        type: 'success',
+        text1: 'Welcome back 👋',
+        text2: 'Login successful',
+      });
+    },
 
-    // Store token in auth context
-    const {accessToken=null, refreshToken=null, user={_id: null, email:null, userName: null}} = data;
-    const newAuthToStore = {
-      user: {id: user._id, email: user.email, userName: user.userName},
-      accessToken,
-      refreshToken,
-      loading: false
-    }
-    await AsyncStorage.setItem('storedAuth', JSON.stringify(newAuthToStore));
-    login(newAuthToStore);
-
-    Toast.show({
-      type: 'success',
-      text1: 'Welcome back 👋',
-      text2: 'Login successful',
-    });
-  },
-
-  onError: (error: any) => {
-
-    Toast.show({
-      type: 'error',
-      text1: 'Login failed',
-      text2: error.message || 'Invalid credentials',
-    });
-  },
-});
-
-const handleLogin = () => {
-  if (!email || !password || !url) {
-    Toast.show({
-      type: 'error',
-      text1: 'Please provide require data.'
-    })
-    return;
-  }
-
-  loginMutation.mutate({
-    email,
-    password,
-    baseUrl: url,
+    onError: (error: any) => {
+      Toast.show({
+        type: 'error',
+        text1: 'Login failed',
+        text2: error.message || 'Invalid credentials',
+      });
+    },
   });
-};
 
-const handleSaveUrl = () =>{
-   storeBaseUrl(url);
-   toast.success('URL Saved.')
-}
+  const handleLogin = () => {
+    console.log('button clicked');
+    if (!email || !password) {
+      Toast.show({
+        type: 'error',
+        text1: 'Please provide require data.',
+      });
+      return;
+    }
 
-// useEffect(()=>{
-//   (async()=>{
-//   const res = await fetch('http://192.168.0.117:5000');
-//   toast.success(JSON.stringify(res));
-//   })();
-// },[]);
+    loginMutation.mutate({
+      email,
+      password,
+    });
+  };
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.inner}
       >
         <View style={styles.headerContainer}>
@@ -104,8 +92,17 @@ const handleSaveUrl = () =>{
         <View style={styles.form}>
           {/* Email Input */}
           <Text style={styles.label}>Email Address</Text>
-          <View style={[styles.inputWrapper, isFocused === 'email' && styles.inputFocused]}>
-            <Mail color={isFocused === 'email' ? "#3b82f6" : "#64748b"} size={20} style={styles.inputIcon} />
+          <View
+            style={[
+              styles.inputWrapper,
+              isFocused === 'email' && styles.inputFocused,
+            ]}
+          >
+            <Mail
+              color={isFocused === 'email' ? '#3b82f6' : '#64748b'}
+              size={20}
+              style={styles.inputIcon}
+            />
             <TextInput
               placeholder="example@mail.com"
               placeholderTextColor="#64748b"
@@ -120,8 +117,17 @@ const handleSaveUrl = () =>{
 
           {/* Password Input */}
           <Text style={styles.label}>Password</Text>
-          <View style={[styles.inputWrapper, isFocused === 'password' && styles.inputFocused]}>
-            <Lock color={isFocused === 'password' ? "#3b82f6" : "#64748b"} size={20} style={styles.inputIcon} />
+          <View
+            style={[
+              styles.inputWrapper,
+              isFocused === 'password' && styles.inputFocused,
+            ]}
+          >
+            <Lock
+              color={isFocused === 'password' ? '#3b82f6' : '#64748b'}
+              size={20}
+              style={styles.inputIcon}
+            />
             <TextInput
               placeholder="••••••••"
               placeholderTextColor="#64748b"
@@ -133,44 +139,24 @@ const handleSaveUrl = () =>{
             />
           </View>
 
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={handleLogin}
+            activeOpacity={0.8}
+          >
             <Text style={styles.loginButtonText}>Sign In</Text>
             <ArrowRight color="#fff" size={20} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.registerButton}
-            onPress={() => navigation.navigate("Register")}
+            onPress={() => navigation.navigate('Register')}
           >
             <Text style={styles.registerText}>
-              Don't have an account? <Text style={styles.registerLink}>Sign Up</Text>
+              Don't have an account?{' '}
+              <Text style={styles.registerLink}>Sign Up</Text>
             </Text>
           </TouchableOpacity>
-          {/* Base URL Input - Styled as a secondary settings section */}
-          <View style={styles.dividerRow}>
-            <View style={styles.divider} />
-            <Text style={styles.dividerText}>SERVER SETTINGS</Text>
-            <View style={styles.divider} />
-          </View>
-
-          <View style={[styles.inputWrapper, isFocused === 'url' && styles.inputFocused, { marginBottom: 10 }]}>
-            <Globe color={isFocused === 'url' ? "#3b82f6" : "#64748b"} size={20} style={styles.inputIcon} />
-            <TextInput
-              placeholder="Server Base URL"
-              placeholderTextColor="#64748b"
-              value={url}
-              style={styles.input}
-              onChangeText={setUrl}
-              onFocus={() => setIsFocused('url')}
-              onBlur={() => setIsFocused(null)}
-            />
-          </View>
-
-          <TouchableOpacity style={styles.loginButton} onPress={handleSaveUrl} activeOpacity={0.8}>
-            <Text style={styles.loginButtonText}>Save Url</Text>
-            <ArrowRight color="#fff" size={20} />
-          </TouchableOpacity>
-
         </View>
       </KeyboardAvoidingView>
     </View>
@@ -180,12 +166,12 @@ const handleSaveUrl = () =>{
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0F172A", // Dark Slate to match Logger
+    backgroundColor: '#0F172A', // Dark Slate to match Logger
   },
   inner: {
     flex: 1,
     padding: 28,
-    justifyContent: "center",
+    justifyContent: 'center',
   },
   headerContainer: {
     alignItems: 'center',
@@ -204,21 +190,21 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: "800",
-    color: "#FFFFFF",
+    fontWeight: '800',
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: "#94A3B8",
+    color: '#94A3B8',
   },
   form: {
-    width: "100%",
+    width: '100%',
   },
   label: {
     fontSize: 13,
-    fontWeight: "600",
-    color: "#94A3B8",
+    fontWeight: '600',
+    color: '#94A3B8',
     marginBottom: 8,
     marginLeft: 4,
     textTransform: 'uppercase',
@@ -227,23 +213,23 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: "#1E293B",
+    backgroundColor: '#1E293B',
     borderRadius: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: '#334155',
     paddingHorizontal: 16,
   },
   inputFocused: {
-    borderColor: "#3b82f6",
-    backgroundColor: "#1E293B",
+    borderColor: '#3b82f6',
+    backgroundColor: '#1E293B',
   },
   inputIcon: {
     marginRight: 12,
   },
   input: {
     flex: 1,
-    color: "#FFFFFF",
+    color: '#FFFFFF',
     paddingVertical: 14,
     fontSize: 16,
   },
@@ -255,52 +241,52 @@ const styles = StyleSheet.create({
   divider: {
     flex: 1,
     height: 1,
-    backgroundColor: "#334155",
+    backgroundColor: '#334155',
   },
   dividerText: {
-    color: "#64748B",
+    color: '#64748B',
     fontSize: 10,
-    fontWeight: "800",
+    fontWeight: '800',
     marginHorizontal: 10,
     letterSpacing: 2,
   },
   errorText: {
-    color: "#F87171",
+    color: '#F87171',
     fontSize: 14,
     marginBottom: 20,
-    textAlign: "center",
-    fontWeight: "500",
+    textAlign: 'center',
+    fontWeight: '500',
   },
   loginButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: '#3b82f6',
     flexDirection: 'row',
     paddingVertical: 18,
     borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 10,
-    shadowColor: "#3b82f6",
+    shadowColor: '#3b82f6',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 5,
   },
   loginButtonText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: '700',
     marginRight: 8,
   },
   registerButton: {
     marginTop: 30,
-    alignItems: "center",
+    alignItems: 'center',
   },
   registerText: {
     fontSize: 15,
-    color: "#94A3B8",
+    color: '#94A3B8',
   },
   registerLink: {
-    color: "#3b82f6",
-    fontWeight: "700",
+    color: '#3b82f6',
+    fontWeight: '700',
   },
 });

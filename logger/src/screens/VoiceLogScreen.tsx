@@ -8,104 +8,25 @@ import {
   Platform,
   Alert,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Sound, { RecordBackType, PlayBackType } from 'react-native-nitro-sound';
 import { useAuth } from '../context/AuthContext';
 // Note: Install lucide-react-native if you haven't already
-import {
-  ChevronLeft,
-  Square,
-  Play,
-  RotateCcw,
-  Send,
-  Mic,
-} from 'lucide-react-native';
+import { ChevronLeft, Mic } from 'lucide-react-native';
 import { toast } from '../utils/toast';
 import Toast from 'react-native-toast-message';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { uploadAudio } from '../api/log.api';
 
 export default function VoiceLogScreen({ navigation }: any) {
-  const { token, baseUrl } = useAuth();
-  const API_URL = `${baseUrl}/log/voice`;
+  const { token } = useAuth();
 
   const [isRecording, setIsRecording] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [recordPath, setRecordPath] = useState<string | null>(null);
 
   const [recordSecs, setRecordSecs] = useState(0);
-  const [playSecs, setPlaySecs] = useState(0);
-  const [duration, setDuration] = useState(0);
-
-  const requestPermission = async () => {
-    if (Platform.OS === 'android') {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-      );
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    }
-    return true;
-  };
-
-  const onStartRecord = async () => {
-    const ok = await requestPermission();
-    if (!ok) {
-      toast.error('Please grant microphone permission.');
-      return;
-    }
-    try {
-      Sound.addRecordBackListener((e: RecordBackType) => {
-        setRecordSecs(e.currentPosition);
-      });
-      const path = await Sound.startRecorder();
-      setRecordPath(null); // Reset path for new recording
-      setIsRecording(true);
-    } catch (err) {
-      toast.error(`Something went wrong while recording. ${err}`);
-    }
-  };
-
-  const onStopRecord = async () => {
-    try {
-      const path = await Sound.stopRecorder();
-      Sound.removeRecordBackListener();
-      setIsRecording(false);
-      setRecordSecs(0);
-      if (path) setRecordPath(path);
-    } catch (err) {
-      toast.error('Stop record error');
-      console.error('Stop record error', err);
-    }
-  };
-
-  const onStartPlay = async () => {
-    if (!recordPath) return;
-    try {
-      Sound.addPlayBackListener((e: PlayBackType) => {
-        setPlaySecs(e.currentPosition);
-        setDuration(e.duration);
-        if (e.currentPosition >= e.duration) {
-          onStopPlay();
-        }
-      });
-      await Sound.startPlayer(recordPath);
-      setIsPlaying(true);
-    } catch (err) {
-      console.error('Play error', err);
-    }
-  };
-
-  const onStopPlay = async () => {
-    try {
-      await Sound.stopPlayer();
-      Sound.removePlayBackListener();
-      setIsPlaying(false);
-      setPlaySecs(0);
-    } catch (err) {
-      console.error('Stop play error', err);
-    }
-  };
 
   const queryClient = useQueryClient();
 
@@ -132,9 +53,47 @@ export default function VoiceLogScreen({ navigation }: any) {
     },
   });
 
-  const handleUploadAudio = () => {
-    if (!!baseUrl && !!recordPath && !!token)
-      uploadAudioMutation.mutate({ baseUrl, recordPath, token });
+  const requestPermission = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    }
+    return true;
+  };
+
+  const onStartRecord = async () => {
+    const ok = await requestPermission();
+    if (!ok) {
+      toast.error('Please grant microphone permission.');
+      return;
+    }
+    try {
+      Sound.addRecordBackListener((e: RecordBackType) => {
+        setRecordSecs(e.currentPosition);
+      });
+      await Sound.startRecorder();
+      setIsRecording(true);
+    } catch (err) {
+      toast.error(`Recording Failed. ${err}`);
+    }
+  };
+
+  const onStopRecord = async () => {
+    try {
+      const path = await Sound.stopRecorder();
+      Sound.removeRecordBackListener();
+      setIsRecording(false);
+      setRecordSecs(0);
+
+      if (path && token) {
+        uploadAudioMutation.mutate({ recordPath: path, token });
+      }
+    } catch (err) {
+      toast.error('Stop record error');
+      console.error('Stop record error', err);
+    }
   };
 
   return (
@@ -155,94 +114,42 @@ export default function VoiceLogScreen({ navigation }: any) {
         <View style={[styles.badge, isRecording && styles.badgeRecording]}>
           <View style={[styles.dot, isRecording && styles.dotRecording]} />
           <Text style={[styles.badgeText, isRecording && { color: '#0F172A' }]}>
-            {isRecording ? 'RECORDING' : recordPath ? 'FINISHED' : 'READY'}
+            {isRecording ? 'RECORDING' : 'FINISHED'}
           </Text>
         </View>
 
         {/* Improved Timer Display */}
         <Text style={styles.timerLarge}>
-          {isRecording
-            ? Sound.mmssss(Math.floor(recordSecs))
-            : recordPath
-            ? Sound.mmssss(Math.floor(playSecs))
-            : '00:00'}
+          {isRecording ? Sound.mmssss(Math.floor(recordSecs)) : '00:00'}
         </Text>
         <Text style={styles.subText}>
-          {isRecording
-            ? 'Recording your thoughts...'
-            : recordPath
-            ? 'Recording complete'
-            : 'Tap the mic to begin'}
+          {isRecording ? 'Recording your thoughts...' : 'Hold to record.'}
         </Text>
-
-        {/* Central Action Controls */}
-        <View style={styles.actionContainer}>
-          {isRecording ? (
-            <TouchableOpacity
-              style={styles.stopOuterCircle}
-              onPress={onStopRecord}
-            >
-              <View style={styles.stopInnerCircle}>
-                <Square color="#FFF" fill="#FFF" size={28} />
-              </View>
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.playbackRow}>
-              {/* Retry/Reset Button */}
-              {recordPath && (
-                <TouchableOpacity
-                  style={styles.sideBtn}
-                  onPress={() => setRecordPath(null)}
-                >
-                  <RotateCcw color="#FFF" size={24} />
-                </TouchableOpacity>
-              )}
-
-              {/* Main Play or Start Button */}
-              <TouchableOpacity
-                style={[styles.mainCircle, !recordPath && styles.micMode]}
-                onPress={
-                  recordPath
-                    ? isPlaying
-                      ? onStopPlay
-                      : onStartPlay
-                    : onStartRecord
-                }
-              >
-                {recordPath ? (
-                  isPlaying ? (
-                    <Square color="#FFF" fill="#FFF" size={24} />
-                  ) : (
-                    <Play color="#FFF" fill="#FFF" size={32} />
-                  )
-                ) : (
-                  <Mic color="#FFF" size={38} strokeWidth={1.5} />
-                )}
-              </TouchableOpacity>
-
-              {/* Spacer or additional action */}
-              {recordPath && <View style={{ width: 56 }} />}
-            </View>
-          )}
-          {recordPath && !isRecording && (
-            <Text style={styles.listenLabel}>Listen Back</Text>
-          )}
-        </View>
       </View>
 
       {/* Primary Footer Action */}
-      <View style={styles.footer}>
-        {recordPath && !isRecording && (
-          <TouchableOpacity
-            disabled={uploadAudioMutation.isPending}
-            style={styles.sendBtn}
-            onPress={handleUploadAudio}
-            activeOpacity={0.9}
-          >
-            <Send color="#FFF" size={20} />
-            <Text style={styles.sendBtnText}>Send Voice Log</Text>
-          </TouchableOpacity>
-        )}
+      <View style={styles.actionContainer}>
+        <TouchableOpacity
+          disabled={uploadAudioMutation.isPending}
+          style={[styles.mainCircle, isRecording && styles.recordingMode]}
+          onPressIn={onStartRecord}
+          onPressOut={onStopRecord}
+          activeOpacity={0.8}
+        >
+          {uploadAudioMutation.isPending ? (
+            <ActivityIndicator size="large" color="#FFF" />
+          ) : (
+            <Mic color="#FFF" size={36} strokeWidth={1.5} />
+          )}
+        </TouchableOpacity>
+
+        <Text style={styles.subText}>
+          {isRecording
+            ? 'Recording... release to send'
+            : uploadAudioMutation.isPending
+            ? 'Uploading...'
+            : 'Hold to record'}
+        </Text>
       </View>
     </SafeAreaView>
   );
@@ -250,6 +157,10 @@ export default function VoiceLogScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0F172A' },
+  recordingMode: {
+    backgroundColor: '#ef4444',
+    shadowColor: '#ef4444',
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',

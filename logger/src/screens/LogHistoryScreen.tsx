@@ -23,11 +23,11 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchLogs } from '../api/log.api';
 
 export default function LogHistoryScreen({ navigation }: any) {
-  const { token, baseUrl } = useAuth();
+  const { token } = useAuth();
   const [filter, setFilter] = useState('7'); // '7', '30', or 'custom'
 
   //toast error message if any one not available
-  if (!token || !baseUrl) return;
+  if (!token) return;
 
   const {
     data: logs = [],
@@ -36,7 +36,7 @@ export default function LogHistoryScreen({ navigation }: any) {
     refetch,
   } = useQuery({
     queryKey: ['logs', filter],
-    queryFn: () => fetchLogs({ days: filter, token, baseUrl }),
+    queryFn: () => fetchLogs({ days: filter, token }),
     enabled: !!token,
   });
 
@@ -85,10 +85,15 @@ export default function LogHistoryScreen({ navigation }: any) {
             )}
           </View>
 
-          <TouchableOpacity onPress={()=>{navigation.navigate('LogDetails',{
-            log,
-            dayId: item._id
-          })}} style={styles.logInfo}>
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate('LogDetails', {
+                log,
+                dayId: item._id,
+              });
+            }}
+            style={styles.logInfo}
+          >
             <Text style={styles.logText}>
               {log.text || 'Voice log (No transcript)'}
             </Text>
@@ -111,7 +116,7 @@ export default function LogHistoryScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
-     {/* Redesigned Header */}
+      {/* Redesigned Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation?.goBack()}>
           <ChevronLeft color="#FFF" size={28} />
@@ -145,7 +150,7 @@ export default function LogHistoryScreen({ navigation }: any) {
         </View>
       ) : (
         <FlatList
-          data={logs}
+          data={logs || []}
           renderItem={renderLogItem}
           keyExtractor={item => item._id}
           contentContainerStyle={styles.listContent}

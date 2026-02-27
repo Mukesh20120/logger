@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   View,
   TextInput,
@@ -8,61 +8,66 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
-} from "react-native";
-import { registerApi } from "../api/auth.api";
-import { useAuth } from "../context/AuthContext";
-import { UserPlus, Mail, Lock, ArrowRight, ChevronLeft } from "lucide-react-native";
-import { useMutation } from "@tanstack/react-query";
-import Toast from "react-native-toast-message";
+} from 'react-native';
+import { registerApi } from '../api/auth.api';
+import { useAuth } from '../context/AuthContext';
+import {
+  UserPlus,
+  Mail,
+  Lock,
+  ArrowRight,
+  ChevronLeft,
+} from 'lucide-react-native';
+import { useMutation } from '@tanstack/react-query';
+import Toast from 'react-native-toast-message';
 
 export default function RegisterScreen({ navigation }: any) {
-  const { baseUrl } = useAuth();
-  const [email, setEmail] = useState("");
-  const [userName, setUserName] = useState("");
-  const [password, setPassword] = useState("");
-  const [msg, setMsg] = useState("");
+  const [email, setEmail] = useState('');
+  const [userName, setUserName] = useState('');
+  const [password, setPassword] = useState('');
+  const [msg, setMsg] = useState('');
   const [isFocused, setIsFocused] = useState<string | null>(null);
 
   const registerMutation = useMutation({
-  mutationFn: registerApi,
+    mutationFn: registerApi,
 
-  onSuccess: () => {
-    Toast.show({
-      type: 'success',
-      text1: 'Account created 🎉',
-      text2: 'You can now log in',
-    });
+    onSuccess: () => {
+      Toast.show({
+        type: 'success',
+        text1: 'Account created 🎉',
+        text2: 'You can now log in',
+      });
 
-    // Navigate after short delay so user sees the toast
-    setTimeout(() => {
-      navigation.navigate('Login');
-    }, 1200);
-  },
+      // Navigate after short delay so user sees the toast
+      setTimeout(() => {
+        navigation.navigate('Login');
+      }, 1200);
+    },
 
-  onError: (error: any) => {
-    Toast.show({
-      type: 'error',
-      text1: 'Registration failed',
-      text2: error.message || 'Please try again',
-    });
-  },
-});
+    onError: (error: any) => {
+      Toast.show({
+        type: 'error',
+        text1: 'Registration failed',
+        text2: error.message || 'Please try again',
+      });
+    },
+  });
 
   const handleRegister = async () => {
-    if(!!userName && !!email && !!password && baseUrl)
-    registerMutation.mutate({userName,email,password,baseUrl})
+    if (!!userName && !!email && !!password)
+      registerMutation.mutate({ userName, email, password });
   };
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.inner}
       >
         {/* Back Button */}
-        <TouchableOpacity 
-          style={styles.backButton} 
+        <TouchableOpacity
+          style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
           <ChevronLeft color="#94A3B8" size={28} />
@@ -73,28 +78,44 @@ export default function RegisterScreen({ navigation }: any) {
             <UserPlus color="#3b82f6" size={32} />
           </View>
           <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join us to start logging your thoughts</Text>
+          <Text style={styles.subtitle}>
+            Join us to start logging your thoughts
+          </Text>
         </View>
 
-           {/* User Name Input */}
-          <Text style={styles.label}>User Name</Text>
-          <View style={[styles.inputWrapper, isFocused === 'userName' && styles.inputFocused]}>
-            <TextInput
-              placeholder="london | nika"
-              placeholderTextColor="#64748b"
-              style={styles.input}
-              onChangeText={setUserName}
-              onFocus={() => setIsFocused('userName')}
-              onBlur={() => setIsFocused(null)}
-              autoCapitalize="none"
-            />
-          </View>
+        {/* User Name Input */}
+        <Text style={styles.label}>User Name</Text>
+        <View
+          style={[
+            styles.inputWrapper,
+            isFocused === 'userName' && styles.inputFocused,
+          ]}
+        >
+          <TextInput
+            placeholder="london | nika"
+            placeholderTextColor="#64748b"
+            style={styles.input}
+            onChangeText={setUserName}
+            onFocus={() => setIsFocused('userName')}
+            onBlur={() => setIsFocused(null)}
+            autoCapitalize="none"
+          />
+        </View>
 
-       <View style={styles.form}>
+        <View style={styles.form}>
           {/* Email Input */}
           <Text style={styles.label}>Email Address</Text>
-          <View style={[styles.inputWrapper, isFocused === 'email' && styles.inputFocused]}>
-            <Mail color={isFocused === 'email' ? "#3b82f6" : "#64748b"} size={20} style={styles.inputIcon} />
+          <View
+            style={[
+              styles.inputWrapper,
+              isFocused === 'email' && styles.inputFocused,
+            ]}
+          >
+            <Mail
+              color={isFocused === 'email' ? '#3b82f6' : '#64748b'}
+              size={20}
+              style={styles.inputIcon}
+            />
             <TextInput
               placeholder="example@mail.com"
               placeholderTextColor="#64748b"
@@ -109,8 +130,17 @@ export default function RegisterScreen({ navigation }: any) {
 
           {/* Password Input */}
           <Text style={styles.label}>Password</Text>
-          <View style={[styles.inputWrapper, isFocused === 'password' && styles.inputFocused]}>
-            <Lock color={isFocused === 'password' ? "#3b82f6" : "#64748b"} size={20} style={styles.inputIcon} />
+          <View
+            style={[
+              styles.inputWrapper,
+              isFocused === 'password' && styles.inputFocused,
+            ]}
+          >
+            <Lock
+              color={isFocused === 'password' ? '#3b82f6' : '#64748b'}
+              size={20}
+              style={styles.inputIcon}
+            />
             <TextInput
               placeholder="Min. 8 characters"
               placeholderTextColor="#64748b"
@@ -123,21 +153,31 @@ export default function RegisterScreen({ navigation }: any) {
           </View>
 
           {msg ? (
-            <View style={[
-              styles.messageBox, 
-              { backgroundColor: msg.includes("successfully") ? "rgba(34, 197, 94, 0.1)" : "rgba(239, 68, 68, 0.1)" }
-            ]}>
-              <Text style={[
-                styles.messageText,
-                { color: msg.includes("successfully") ? "#4ade80" : "#f87171" }
-              ]}>
+            <View
+              style={[
+                styles.messageBox,
+                {
+                  backgroundColor: msg.includes('successfully')
+                    ? 'rgba(34, 197, 94, 0.1)'
+                    : 'rgba(239, 68, 68, 0.1)',
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.messageText,
+                  {
+                    color: msg.includes('successfully') ? '#4ade80' : '#f87171',
+                  },
+                ]}
+              >
                 {msg}
               </Text>
             </View>
           ) : null}
 
-          <TouchableOpacity 
-            style={styles.registerButton} 
+          <TouchableOpacity
+            style={styles.registerButton}
             onPress={handleRegister}
             activeOpacity={0.8}
           >
@@ -147,10 +187,11 @@ export default function RegisterScreen({ navigation }: any) {
 
           <TouchableOpacity
             style={styles.loginLinkButton}
-            onPress={() => navigation.navigate("Login")}
+            onPress={() => navigation.navigate('Login')}
           >
             <Text style={styles.loginLinkText}>
-              Already have an account? <Text style={styles.loginLink}>Login</Text>
+              Already have an account?{' '}
+              <Text style={styles.loginLink}>Login</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -162,12 +203,12 @@ export default function RegisterScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0F172A",
+    backgroundColor: '#0F172A',
   },
   inner: {
     flex: 1,
     padding: 28,
-    justifyContent: "center",
+    justifyContent: 'center',
   },
   backButton: {
     position: 'absolute',
@@ -192,22 +233,22 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: "800",
-    color: "#FFFFFF",
+    fontWeight: '800',
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: "#94A3B8",
+    color: '#94A3B8',
     textAlign: 'center',
   },
   form: {
-    width: "100%",
+    width: '100%',
   },
   label: {
     fontSize: 12,
-    fontWeight: "700",
-    color: "#94A3B8",
+    fontWeight: '700',
+    color: '#94A3B8',
     marginBottom: 8,
     marginLeft: 4,
     textTransform: 'uppercase',
@@ -216,22 +257,22 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: "#1E293B",
+    backgroundColor: '#1E293B',
     borderRadius: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: "#334155",
+    borderColor: '#334155',
     paddingHorizontal: 16,
   },
   inputFocused: {
-    borderColor: "#3b82f6",
+    borderColor: '#3b82f6',
   },
   inputIcon: {
     marginRight: 12,
   },
   input: {
     flex: 1,
-    color: "#FFFFFF",
+    color: '#FFFFFF',
     paddingVertical: 14,
     fontSize: 16,
   },
@@ -243,38 +284,38 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   registerButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: '#3b82f6',
     flexDirection: 'row',
     paddingVertical: 18,
     borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 10,
-    shadowColor: "#3b82f6",
+    shadowColor: '#3b82f6',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 5,
   },
   registerButtonText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: '700',
     marginRight: 8,
   },
   loginLinkButton: {
     marginTop: 30,
-    alignItems: "center",
+    alignItems: 'center',
   },
   loginLinkText: {
     fontSize: 15,
-    color: "#94A3B8",
+    color: '#94A3B8',
   },
   loginLink: {
-    color: "#3b82f6",
-    fontWeight: "700",
+    color: '#3b82f6',
+    fontWeight: '700',
   },
 });
